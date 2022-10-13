@@ -26,8 +26,8 @@ class DemoPlaylist extends PlaylistRepository {
       'album': 'SoundHelix',
       'url':
           // 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-$_songIndex.mp3',
-          'http://localhost:3000/public/1.mp3',
-      // 'https://www.mboxdrive.com/Bleed%20It%20Out%20%20%20Linkin%20Park%20%20%20Bleed%20It%20Out.mp3',
+          // 'http://localhost:3000/public/1.mp3',
+          'https://www.mboxdrive.com/Bleed%20It%20Out%20%20%20Linkin%20Park%20%20%20Bleed%20It%20Out.mp3',
     };
   }
 }
