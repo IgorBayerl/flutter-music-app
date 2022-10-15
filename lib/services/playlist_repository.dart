@@ -12,13 +12,15 @@ class DemoPlaylist extends PlaylistRepository {
   @override
   Future<List<Map<String, dynamic>>> fetchInitialPlaylist(
       {int length = 3}) async {
-    // var listaFoda = List.generate(length, (index) => _nextSong());
-    // print(listaFoda);
-    // return listaFoda;
-    final prefs = await SharedPreferences.getInstance();
-    String baseUrl = prefs.getString('serverUrl') ?? 'http://10.0.2.2:3000/';
 
-    http.Response response = await http.get(Uri.parse('${baseUrl}musics'));
+    String defaultUrl = 'http://10.0.2.2:3000/musics';
+    final prefs = await SharedPreferences.getInstance();
+    String baseUrl = prefs.getString('serverUrl') ?? defaultUrl;
+    if (baseUrl == '') baseUrl = defaultUrl;
+
+    /// Mover para um provider
+
+    http.Response response = await http.get(Uri.parse(baseUrl));
 
     var musicsArr =
         new List<Map<String, dynamic>>.from(jsonDecode(response.body));
