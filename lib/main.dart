@@ -7,7 +7,6 @@ import 'notifiers/progress_notifier.dart';
 import 'notifiers/repeat_button_notifier.dart';
 import 'page_manager.dart';
 import 'services/service_locator.dart';
-import 'settings_manager.dart';
 
 void main() async {
   await setupServiceLocator();
@@ -116,6 +115,10 @@ class AddRemoveSongButtons extends StatelessWidget {
           FloatingActionButton(
             onPressed: (() => pageManager.reloadPlaylist()),
             child: Icon(Icons.text_snippet),
+          ),
+          FloatingActionButton(
+            onPressed: (() => pageManager.play()),
+            child: Icon(Icons.play_arrow),
           ),
           FloatingActionButton(
             onPressed: () {
