@@ -7,8 +7,10 @@
 
     <application
         android:name="androidx.multidex.MultiDexApplication"
+        android:usesCleartextTraffic="true" 
         android:label="flutter_audio_service_demo"
         android:icon="@mipmap/ic_launcher">
+        <!-- android:usesCleartextTraffic="true" is used to permit the app to get mp3 files from http, without it its only https -->
         <activity
             android:name="com.ryanheise.audioservice.AudioServiceActivity"
             android:launchMode="singleTop"

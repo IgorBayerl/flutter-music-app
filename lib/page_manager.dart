@@ -41,6 +41,30 @@ class PageManager {
               extras: {'url': song['url']},
             ))
         .toList();
+    //clear queue
+
+    _audioHandler.addQueueItems(mediaItems);
+  }
+
+  Future<void> reloadPlaylist() async {
+    //clear queue
+    for (int i = 0; i < _audioHandler.queue.value.length; i++) {
+      final lastIndex = _audioHandler.queue.value.length - 1;
+      if (lastIndex < 0) return;
+      _audioHandler.removeQueueItemAt(lastIndex);
+    }
+
+    final songRepository = getIt<PlaylistRepository>();
+    final playlist = await songRepository.fetchInitialPlaylist();
+    final mediaItems = playlist
+        .map((song) => MediaItem(
+              id: song['id'] ?? '',
+              album: song['album'] ?? '',
+              title: song['title'] ?? '',
+              extras: {'url': song['url']},
+            ))
+        .toList();
+
     _audioHandler.addQueueItems(mediaItems);
   }
 
@@ -177,6 +201,11 @@ class PageManager {
     final lastIndex = _audioHandler.queue.value.length - 1;
     if (lastIndex < 0) return;
     _audioHandler.removeQueueItemAt(lastIndex);
+  }
+
+  Future<void> testeee() async {
+    final songRepository = getIt<PlaylistRepository>();
+    await songRepository.testMehod();
   }
 
   void dispose() {
