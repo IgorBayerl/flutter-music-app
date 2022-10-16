@@ -360,7 +360,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Navigator.pop(context);
           },
           tooltip: 'Show me the value!',
-          child: const Icon(Icons.text_fields),
+          child: const Icon(Icons.arrow_back),
         ),
       ),
     );
