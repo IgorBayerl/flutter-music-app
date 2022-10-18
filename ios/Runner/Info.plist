@@ -49,7 +49,7 @@
     <dict>
         <key>NSExceptionDomains</key>
         <dict>
-            <key>yourdomain.com</key>
+            <key>192.168.1.9</key>
             <dict>
                 <!--Include to allow subdomains-->
                 <key>NSIncludesSubdomains</key>

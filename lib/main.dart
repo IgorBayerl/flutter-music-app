@@ -1,11 +1,12 @@
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:flutter/cupertino.dart';
+import 'package:flutter_audio_service_demo/screens/download.dart';
+
 import 'notifiers/play_button_notifier.dart';
 import 'notifiers/progress_notifier.dart';
 import 'notifiers/repeat_button_notifier.dart';
 import 'page_manager.dart';
+import 'screens/settings.dart';
 import 'services/service_locator.dart';
 
 void main() async {
@@ -115,6 +116,16 @@ class AddRemoveSongButtons extends StatelessWidget {
           FloatingActionButton(
             onPressed: (() => pageManager.reloadPlaylist()),
             child: Icon(Icons.text_snippet),
+          ),
+          FloatingActionButton(
+            key: Key('downloadButton'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const DownloadPage()),
+              );
+            },
+            child: Icon(Icons.download),
           ),
           FloatingActionButton(
             onPressed: (() => pageManager.play()),
@@ -286,83 +297,6 @@ class ShuffleButton extends StatelessWidget {
           onPressed: pageManager.shuffle,
         );
       },
-    );
-  }
-}
-
-class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
-
-  @override
-  State<SettingsPage> createState() => _SettingsPageState();
-}
-
-class _SettingsPageState extends State<SettingsPage> {
-  // final myTextController = TextEditingController();
-  TextEditingController myTextController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    // myTextController.text = 'aaaa';
-    final prefs = SharedPreferences.getInstance();
-    prefs.then(
-      (value) => {
-        myTextController.text = value.getString('serverUrl') ?? '',
-      },
-    );
-
-    // serverUrl.then((value) => myTextController.text = value);
-  }
-
-  @override
-  void dispose() {
-    // Clean up the controller when the widget is disposed.
-    myTextController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Settings'),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.close),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Column(
-              children: [
-                TextField(
-                  controller: myTextController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Audio URL',
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            final prefs = await SharedPreferences.getInstance();
-            prefs.setString('serverUrl', myTextController.text);
-            Navigator.pop(context);
-          },
-          tooltip: 'Show me the value!',
-          child: const Icon(Icons.arrow_back),
-        ),
-      ),
     );
   }
 }

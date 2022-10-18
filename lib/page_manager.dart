@@ -41,9 +41,22 @@ class PageManager {
               extras: {'url': song['url']},
             ))
         .toList();
-    //clear queue
 
     _audioHandler.addQueueItems(mediaItems);
+  }
+
+  Future<void> playThisSong(String songPath) async {
+    print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa $songPath');
+    final playlist = [
+      MediaItem(
+        id: '1',
+        album: 'album',
+        title: 'title',
+        extras: {'url': songPath},
+      )
+    ];
+
+    await _audioHandler.addQueueItems(playlist);
   }
 
   Future<void> reloadPlaylist() async {

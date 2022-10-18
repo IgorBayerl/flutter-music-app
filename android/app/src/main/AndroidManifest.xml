@@ -4,12 +4,16 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.INTERNET" /> 
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:name="androidx.multidex.MultiDexApplication"
-        android:usesCleartextTraffic="true" 
         android:label="flutter_audio_service_demo"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:requestLegacyExternalStorage="true">
+        
+        <!-- android:usesCleartextTraffic="true"  -->
         <!-- android:usesCleartextTraffic="true" is used to permit the app to get mp3 files from http, without it its only https -->
         <activity
             android:name="com.ryanheise.audioservice.AudioServiceActivity"
