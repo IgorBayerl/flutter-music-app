@@ -1,5 +1,7 @@
+import 'dart:ffi';
 import 'dart:io';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_service_demo/page_manager.dart';
@@ -18,12 +20,17 @@ class DownloadPage extends StatefulWidget {
 class _DownloadPageState extends State<DownloadPage> {
   // final myTextController = TextEditingController();
   TextEditingController myTextController = TextEditingController();
+  TextEditingController myTextController2 = TextEditingController();
+  bool _isDownloading = false;
 
   Future<File?> downloadFile(String url, String name) async {
     final appStorage = await getApplicationDocumentsDirectory();
     final file = File('${appStorage.path}/$name');
 
     try {
+      setState(() {
+        _isDownloading = true;
+      });
       final response = await Dio().get(
         url,
         options: Options(
@@ -37,32 +44,53 @@ class _DownloadPageState extends State<DownloadPage> {
       raf.writeFromSync(response.data);
       await raf.close();
       print('aaaa ${file.path}');
-
+      setState(() {
+        _isDownloading = false;
+      });
       return file;
     } catch (e) {
       AlertDialog(
         title: Text('Error'),
         content: Text('Error downloading file'),
       );
+      setState(() {
+        _isDownloading = false;
+      });
       return null;
     }
   }
 
-  Future openFile({required String url, String? fileName}) async {
-    String fileNames = url.split('/')[url.split('/').length - 1];
-    await downloadFile(url, fileNames);
+  Future openFile({required String url, required String fileName}) async {
+    await downloadFile(url, fileName);
+  }
+
+  Future deleteFile({required String fileName}) async {
+    setState(() {
+      _isDownloading = true;
+    });
+    final appStorage = await getApplicationDocumentsDirectory();
+    final file = File('${appStorage.path}/$fileName');
+    file.delete();
+    setState(() {
+      _isDownloading = false;
+    });
+  }
+
+  Future clearQueue() async {
+    final _audioHandler = getIt<AudioHandler>();
+    await _audioHandler.stop();
+    for (int i = 0; i < _audioHandler.queue.value.length; i++) {
+      final lastIndex = _audioHandler.queue.value.length - 1;
+      if (lastIndex < 0) return;
+      _audioHandler.removeQueueItemAt(lastIndex);
+    }
+
   }
 
   @override
   void initState() {
     super.initState();
-    // myTextController.text = 'aaaa';
-    final prefs = SharedPreferences.getInstance();
-    prefs.then(
-      (value) => {
-        myTextController.text = value.getString('serverUrl') ?? '',
-      },
-    );
+
 
     // serverUrl.then((value) => myTextController.text = value);
   }
@@ -129,6 +157,13 @@ class _DownloadPageState extends State<DownloadPage> {
             child: Column(
               children: [
                 TextField(
+                  controller: myTextController2,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'File Name',
+                  ),
+                ),
+                TextField(
                   controller: myTextController,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
@@ -139,10 +174,25 @@ class _DownloadPageState extends State<DownloadPage> {
                   key: Key('downloadButton'),
                   onPressed: () {
                     print('AAAAA');
-                    openFile(url: myTextController.text, fileName: 'test.mp3');
+                    openFile(
+                        url: myTextController.text,
+                        fileName: myTextController2.text + '.mp3');
                   },
                   child: Icon(Icons.download),
                 ),
+                FloatingActionButton(
+                  key: Key('clearQueueButton'),
+                  onPressed: () {
+                    print('clearQueueButton pressed');
+                    clearQueue();
+                  },
+                  child: Icon(Icons.clear_all),
+                ),
+                Visibility(
+                  visible: _isDownloading,
+                  child: CircularProgressIndicator(),
+                ),
+                
                 FutureBuilder(
                   future: _downloadedFiles(),
                   builder: (context, AsyncSnapshot snapshot) {
@@ -153,9 +203,17 @@ class _DownloadPageState extends State<DownloadPage> {
                         itemBuilder: (context, index) {
                           return ListTile(
                             title: Text(snapshot.data[index]['name']),
-                            onTap: () => pageManager.playThisSong(
-                              snapshot.data[index]['path'],
-                            ),
+                            onTap: () => {
+                              pageManager.playThisSong(
+                                snapshot.data[index]['path'],
+                              ),
+                              pageManager.play(),
+                            },
+                            onLongPress: () {
+                              deleteFile(
+                                fileName: snapshot.data[index]['name'] + '.mp3',
+                              );
+                            },
                           );
                         },
                       );
@@ -168,15 +226,14 @@ class _DownloadPageState extends State<DownloadPage> {
             ),
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            final prefs = await SharedPreferences.getInstance();
-            prefs.setString('serverUrl', myTextController.text);
-            Navigator.pop(context);
-          },
-          tooltip: 'Show me the value!',
-          child: const Icon(Icons.arrow_back),
-        ),
+        // floatingActionButton: FloatingActionButton(
+        //   onPressed: () async {
+
+        //     Navigator.pop(context);
+        //   },
+        //   tooltip: 'Show me the value!',
+        //   child: const Icon(Icons.arrow_back),
+        // ),
       ),
     );
   }
