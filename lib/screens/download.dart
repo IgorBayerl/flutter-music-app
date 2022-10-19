@@ -84,13 +84,11 @@ class _DownloadPageState extends State<DownloadPage> {
       if (lastIndex < 0) return;
       _audioHandler.removeQueueItemAt(lastIndex);
     }
-
   }
 
   @override
   void initState() {
     super.initState();
-
 
     // serverUrl.then((value) => myTextController.text = value);
   }
@@ -192,7 +190,6 @@ class _DownloadPageState extends State<DownloadPage> {
                   visible: _isDownloading,
                   child: CircularProgressIndicator(),
                 ),
-                
                 FutureBuilder(
                   future: _downloadedFiles(),
                   builder: (context, AsyncSnapshot snapshot) {
@@ -204,8 +201,10 @@ class _DownloadPageState extends State<DownloadPage> {
                           return ListTile(
                             title: Text(snapshot.data[index]['name']),
                             onTap: () => {
+                              print('PlayingLocalMusic ================> '),
+                              print(snapshot.data[index]['path']),
                               pageManager.playThisSong(
-                                snapshot.data[index]['path'],
+                                'file://' + snapshot.data[index]['path'],
                               ),
                               pageManager.play(),
                             },
