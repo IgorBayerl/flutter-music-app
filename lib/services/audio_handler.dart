@@ -5,7 +5,7 @@ Future<AudioHandler> initAudioService() async {
   return await AudioService.init(
     builder: () => MyAudioHandler(),
     config: AudioServiceConfig(
-      androidNotificationChannelId: 'com.mycompany.myapp.audio',
+      androidNotificationChannelId: 'com.company.app.audio',
       androidNotificationChannelName: 'Audio Service Demo',
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
@@ -34,19 +34,26 @@ class MyAudioHandler extends BaseAudioHandler {
   }
 
   void _notifyAudioHandlerAboutPlaybackEvents() {
+    // Listen to playback events from the audio player
     _player.playbackEventStream.listen((PlaybackEvent event) {
       final playing = _player.playing;
+
+      // Update the playback state to reflect the current status of the player
       playbackState.add(playbackState.value.copyWith(
         controls: [
           MediaControl.skipToPrevious,
+          // Display "pause" if playing, "play" otherwise
           if (playing) MediaControl.pause else MediaControl.play,
           MediaControl.stop,
           MediaControl.skipToNext,
         ],
+        // Allow seeking
         systemActions: const {
           MediaAction.seek,
         },
+        // Compact actions: skip to previous, play/pause, skip to next
         androidCompactActionIndices: const [0, 1, 3],
+        // Map the processing state of the player to the AudioService's processing state
         processingState: const {
           ProcessingState.idle: AudioProcessingState.idle,
           ProcessingState.loading: AudioProcessingState.loading,
@@ -54,55 +61,83 @@ class MyAudioHandler extends BaseAudioHandler {
           ProcessingState.ready: AudioProcessingState.ready,
           ProcessingState.completed: AudioProcessingState.completed,
         }[_player.processingState]!,
+        // Map the loop mode of the player to the AudioService's repeat mode
         repeatMode: const {
           LoopMode.off: AudioServiceRepeatMode.none,
           LoopMode.one: AudioServiceRepeatMode.one,
           LoopMode.all: AudioServiceRepeatMode.all,
         }[_player.loopMode]!,
+        // Enable shuffle mode if the player's shuffle mode is enabled
         shuffleMode: (_player.shuffleModeEnabled)
             ? AudioServiceShuffleMode.all
             : AudioServiceShuffleMode.none,
         playing: playing,
+        // Update the current position of the player
         updatePosition: _player.position,
+        // Update the buffered position of the player
         bufferedPosition: _player.bufferedPosition,
         speed: _player.speed,
+        // Update the current index in the queue
         queueIndex: event.currentIndex,
       ));
     });
   }
 
   void _listenForDurationChanges() {
+    // Listen for changes in the duration of the audio player
     _player.durationStream.listen((duration) {
       var index = _player.currentIndex;
       final newQueue = queue.value;
+
+      // If there's no current index or the queue is empty, return
       if (index == null || newQueue.isEmpty) return;
+
+      // If shuffle mode is enabled, get the shuffled index
       if (_player.shuffleModeEnabled) {
         index = _player.shuffleIndices![index];
       }
+
+      // Get the current media item in the queue
       final oldMediaItem = newQueue[index];
+      // Create a new media item with the updated duration
       final newMediaItem = oldMediaItem.copyWith(duration: duration);
+      // Replace the old media item in the queue with the new one
       newQueue[index] = newMediaItem;
+      // Update the queue and the media item
       queue.add(newQueue);
       mediaItem.add(newMediaItem);
     });
   }
 
   void _listenForCurrentSongIndexChanges() {
+    // Listen for changes in the current song index
     _player.currentIndexStream.listen((index) {
       final playlist = queue.value;
+
+      // If there's no current index or the playlist is empty, return
       if (index == null || playlist.isEmpty) return;
+
+      // If shuffle mode is enabled, get the shuffled index
       if (_player.shuffleModeEnabled) {
         index = _player.shuffleIndices![index];
       }
+
+      // Update the current media item
       mediaItem.add(playlist[index]);
     });
   }
 
   void _listenForSequenceStateChanges() {
+    // Listen for changes in the sequence state of the audio player
     _player.sequenceStateStream.listen((SequenceState? sequenceState) {
       final sequence = sequenceState?.effectiveSequence;
+
+      // If the sequence is empty, return
       if (sequence == null || sequence.isEmpty) return;
+
+      // Convert the sources in the sequence to media items
       final items = sequence.map((source) => source.tag as MediaItem);
+      // Update the queue
       queue.add(items.toList());
     });
   }

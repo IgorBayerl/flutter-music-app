@@ -1,32 +1,67 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+import 'package:get_it/get_it.dart';
+
+import 'settings_service.dart';
 
 abstract class PlaylistRepository {
-  Future<List<Map<String, dynamic>>> fetchInitialPlaylist();
+  Future<List<Map<String, String>>> fetchInitialPlaylist();
   Future<Map<String, String>> fetchAnotherSong();
-  Future<void> testMehod();
+}
+
+class Playlist extends PlaylistRepository {
+  // 'http://10.0.2.2:3000' localhost in android emulator
+  String _musicServerUrl = '';
+
+  final Dio _dio = Dio();
+
+  Playlist() {
+    _populateMusicServerUrl();
+  }
+
+  _populateMusicServerUrl() async {
+    SettingsService _settingsService = GetIt.instance<SettingsService>();
+    _musicServerUrl = await _settingsService.getMusicServerUrl();
+  }
+
+  @override
+  Future<List<Map<String, String>>> fetchInitialPlaylist(
+      {int length = 3}) async {
+    List<Map<String, String>> songs = [];
+    for (int i = 0; i < length; i++) {
+      Map<String, String> song = await _nextSong();
+      songs.add(song);
+    }
+    return songs;
+  }
+
+
+  @override
+  Future<Map<String, String>> fetchAnotherSong() async {
+    return _nextSong();
+  }
+
+  Future<Map<String, String>> _nextSong() async {
+    if (_musicServerUrl == '') {
+      await _populateMusicServerUrl();
+    }
+
+    Response response = await _dio.get(_musicServerUrl + '/music/random_song');
+    final musicData = response.data;
+    print('>>>> music URL = ${_musicServerUrl + musicData['url'].toString()}');
+    return {
+      'id': musicData['id'].toString(),
+      'title': musicData['title'].toString(),
+      'album': musicData['channel']['name'].toString(),
+      'url': _musicServerUrl + musicData['url'].toString(),
+    };
+  }
 }
 
 class DemoPlaylist extends PlaylistRepository {
   @override
-  Future<List<Map<String, dynamic>>> fetchInitialPlaylist(
+  Future<List<Map<String, String>>> fetchInitialPlaylist(
       {int length = 3}) async {
-
-    String defaultUrl = 'http://10.0.2.2:3000/musics';
-    final prefs = await SharedPreferences.getInstance();
-    String baseUrl = prefs.getString('serverUrl') ?? defaultUrl;
-    if (baseUrl == '') baseUrl = defaultUrl;
-
-    /// Mover para um provider
-
-    http.Response response = await http.get(Uri.parse(baseUrl));
-
-    var musicsArr =
-        new List<Map<String, dynamic>>.from(jsonDecode(response.body));
-
-    print(musicsArr);
-    return musicsArr;
+    return List.generate(length, (index) => _nextSong());
   }
 
   @override
@@ -34,64 +69,17 @@ class DemoPlaylist extends PlaylistRepository {
     return _nextSong();
   }
 
-  //test method
-  Future<void> testMehod() async {
-    print("BBBBB");
-    http.Response response =
-        await http.get(Uri.parse('http://10.0.2.2:3000/musics'));
-
-    var musicsArr =
-        new List<Map<String, dynamic>>.from(jsonDecode(response.body));
-
-    print(musicsArr);
-  }
-
   var _songIndex = 0;
   static const _maxSongNumber = 16;
 
   Map<String, String> _nextSong() {
     _songIndex = (_songIndex % _maxSongNumber) + 1;
-
-    print('IGOR _songIndex: $_songIndex');
     return {
       'id': _songIndex.toString().padLeft(3, '0'),
       'title': 'Song $_songIndex',
       'album': 'SoundHelix',
       'url':
           'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-$_songIndex.mp3',
-      // 'http://localhost:3000/public/1.mp3',
-      // 'https://www.mboxdrive.com/Bleed%20It%20Out%20%20%20Linkin%20Park%20%20%20Bleed%20It%20Out.mp3',
     };
   }
 }
-
-// class Paylist extends PlaylistRepository {
-//   //fetch from localhost:3000/musics a array of musics with id, title, album, url
-//   @override
-//   Future<List<dynamic>> fetchInitialPlaylist() async {
-//     var response = await http.get(Uri.parse('http://localhost:3000/musics'));
-//     // transform the array in the json in a List
-//     print(jsonDecode(response.body));
-//     return json.decode(response.body);
-//   }
-
-//   @override
-//   Future<Map<String, String>> fetchAnotherSong() async {
-//     return _nextSong();
-//   }
-
-//   Map<String, String> _nextSong() {
-//     _songIndex = (_songIndex % _maxSongNumber) + 1;
-
-//     print('IGOR _songIndex: $_songIndex');
-//     return {
-//       'id': _songIndex.toString().padLeft(3, '0'),
-//       'title': 'Song $_songIndex',
-//       'album': 'SoundHelix',
-//       'url':
-//           'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-$_songIndex.mp3',
-//       // 'http://localhost:3000/public/1.mp3',
-//       // 'https://www.mboxdrive.com/Bleed%20It%20Out%20%20%20Linkin%20Park%20%20%20Bleed%20It%20Out.mp3',
-//     };
-//   }
-// }

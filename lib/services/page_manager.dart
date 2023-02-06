@@ -1,15 +1,30 @@
 import 'package:flutter/foundation.dart';
-import 'notifiers/play_button_notifier.dart';
-import 'notifiers/progress_notifier.dart';
-import 'notifiers/repeat_button_notifier.dart';
+import '../notifiers/play_button_notifier.dart';
+import '../notifiers/progress_notifier.dart';
+import '../notifiers/repeat_button_notifier.dart';
 import 'package:audio_service/audio_service.dart';
-import 'services/playlist_repository.dart';
-import 'services/service_locator.dart';
+import 'playlist_repository.dart';
+import 'service_locator.dart';
+
+class Song {
+  final String id;
+  final String title;
+  final String album;
+  final String url;
+
+  Song({
+    required this.id,
+    required this.title,
+    required this.album,
+    required this.url,
+  });
+}
 
 class PageManager {
   // Listeners: Updates going to the UI
   final currentSongTitleNotifier = ValueNotifier<String>('');
-  final playlistNotifier = ValueNotifier<List<String>>([]);
+  // final playlistNotifier = ValueNotifier<List<String>>([]);
+  final playlistNotifier = ValueNotifier<List<Song>>([]);
   final progressNotifier = ProgressNotifier();
   final repeatButtonNotifier = RepeatButtonNotifier();
   final isFirstSongNotifier = ValueNotifier<bool>(true);
@@ -41,53 +56,35 @@ class PageManager {
               extras: {'url': song['url']},
             ))
         .toList();
-
     _audioHandler.addQueueItems(mediaItems);
   }
 
-  Future<void> playThisSong(String songPath) async {
-    print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa $songPath');
-    final playlist = [
-      MediaItem(
-        id: '1',
-        album: 'album',
-        title: 'title',
-        extras: {'url': songPath},
-      )
-    ];
-
-    await _audioHandler.addQueueItems(playlist);
-  }
-
-  Future<void> reloadPlaylist() async {
-    //clear queue
-    for (int i = 0; i < _audioHandler.queue.value.length; i++) {
-      final lastIndex = _audioHandler.queue.value.length - 1;
-      if (lastIndex < 0) return;
-      _audioHandler.removeQueueItemAt(lastIndex);
-    }
-
-    final songRepository = getIt<PlaylistRepository>();
-    final playlist = await songRepository.fetchInitialPlaylist();
-    final mediaItems = playlist
-        .map((song) => MediaItem(
-              id: song['id'] ?? '',
-              album: song['album'] ?? '',
-              title: song['title'] ?? '',
-              extras: {'url': song['url']},
-            ))
-        .toList();
-
-    _audioHandler.addQueueItems(mediaItems);
-  }
-
+  // void _listenToChangesInPlaylist() {
+  //   _audioHandler.queue.listen((playlist) {
+  //     if (playlist.isEmpty) {
+  //       playlistNotifier.value = [];
+  //       currentSongTitleNotifier.value = '';
+  //     } else {
+  //       final newList = playlist.map((item) => item.title).toList();
+  //       playlistNotifier.value = newList;
+  //     }
+  //     _updateSkipButtons();
+  //   });
+  // }
   void _listenToChangesInPlaylist() {
     _audioHandler.queue.listen((playlist) {
       if (playlist.isEmpty) {
         playlistNotifier.value = [];
         currentSongTitleNotifier.value = '';
       } else {
-        final newList = playlist.map((item) => item.title).toList();
+        final newList = playlist
+            .map((item) => Song(
+                  id: item.id,
+                  album: item.album!,
+                  title: item.title,
+                  url: item.extras!['url'],
+                ))
+            .toList();
         playlistNotifier.value = newList;
       }
       _updateSkipButtons();
@@ -98,14 +95,20 @@ class PageManager {
     _audioHandler.playbackState.listen((playbackState) {
       final isPlaying = playbackState.playing;
       final processingState = playbackState.processingState;
+
+      // Update the play button based on the current state
       if (processingState == AudioProcessingState.loading ||
           processingState == AudioProcessingState.buffering) {
+        // If the player is loading or buffering, the play button state should show loading
         playButtonNotifier.value = ButtonState.loading;
       } else if (!isPlaying) {
+        // If the player is not playing, the play button state should show paused
         playButtonNotifier.value = ButtonState.paused;
       } else if (processingState != AudioProcessingState.completed) {
+        // If the player is playing and the processing state is not completed, the play button state should show playing
         playButtonNotifier.value = ButtonState.playing;
       } else {
+        // If the player has completed processing, reset the player to the start and pause it
         _audioHandler.seek(Duration.zero);
         _audioHandler.pause();
       }
@@ -214,11 +217,6 @@ class PageManager {
     final lastIndex = _audioHandler.queue.value.length - 1;
     if (lastIndex < 0) return;
     _audioHandler.removeQueueItemAt(lastIndex);
-  }
-
-  Future<void> testeee() async {
-    final songRepository = getIt<PlaylistRepository>();
-    await songRepository.testMehod();
   }
 
   void dispose() {

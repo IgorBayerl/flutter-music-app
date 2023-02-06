@@ -5,18 +5,18 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.17.0 <3.0.0"
+  sdk: '>=3.0.0-201.0.dev <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  audio_video_progress_bar: ^0.5.0
-  get_it: ^7.1.2
+  audio_video_progress_bar: ^1.0.0
+  get_it: ^7.2.0
   just_audio: ^0.9.5
-  audio_service: ^0.18.0-beta.0
-  shared_preferences: ^2.0.15
+  audio_service: ^0.18.9 
+  shared_preferences: ^2.0.17
   dio: ^4.0.6
-  path_provider: ^2.0.5
+  path_provider: ^2.0.12
   open_file: ^3.2.1
 
 dev_dependencies:
