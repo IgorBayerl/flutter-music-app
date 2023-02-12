@@ -216,4 +216,8 @@ class PageManager {
   void stop() {
     _audioHandler.stop();
   }
+
+  void playFromMediaId(int mediaId) {
+    _audioHandler.skipToQueueItem(mediaId);
+  }
 }

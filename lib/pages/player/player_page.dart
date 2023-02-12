@@ -68,6 +68,10 @@ class Playlist extends StatelessWidget {
       print('Delete complete for song at index $index');
     }
 
+    void handlePlay(int index) {
+      pageManager.playFromMediaId(index);
+    }
+
     return Expanded(
       child: ValueListenableBuilder<List<Song>>(
         valueListenable: pageManager.playlistNotifier,
@@ -95,6 +99,10 @@ class Playlist extends StatelessWidget {
                         onPressed: () => handleDownload(index),
                         child: Text('Download'),
                       ),
+                    TextButton(
+                      onPressed: () => handlePlay(index),
+                      child: Text('Play'),
+                    )
                   ],
                 ),
               );
