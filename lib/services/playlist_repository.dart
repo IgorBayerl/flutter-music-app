@@ -1,11 +1,17 @@
-import 'package:dio/dio.dart';
-import 'package:get_it/get_it.dart';
+import 'dart:io';
 
+import 'package:dio/dio.dart';
+import 'package:flutter_audio_service_demo/services/page_manager.dart';
+import 'package:get_it/get_it.dart';
+import 'package:path_provider/path_provider.dart';
+
+import '../interfaces/Song.dart';
+import 'playlist_service.dart';
 import 'settings_service.dart';
 
 abstract class PlaylistRepository {
-  Future<List<Map<String, String>>> fetchInitialPlaylist();
-  Future<Map<String, String>> fetchAnotherSong();
+  Future<List<Song>> fetchInitialPlaylist();
+  Future<Song> fetchAnotherSong();
 }
 
 class Playlist extends PlaylistRepository {
@@ -18,68 +24,66 @@ class Playlist extends PlaylistRepository {
     _populateMusicServerUrl();
   }
 
-  _populateMusicServerUrl() async {
+  Future<void> _populateMusicServerUrl() async {
     SettingsService _settingsService = GetIt.instance<SettingsService>();
     _musicServerUrl = await _settingsService.getMusicServerUrl();
   }
 
   @override
-  Future<List<Map<String, String>>> fetchInitialPlaylist(
-      {int length = 3}) async {
-    List<Map<String, String>> songs = [];
+  Future<List<Song>> fetchInitialPlaylist({int length = 3}) async {
+    List<Song> songs = [];
+
+    try {
+      PlaylistService _playlistService = GetIt.instance<PlaylistService>();
+      final savedPlaylist = await _playlistService.loadPlaylist();
+      if (savedPlaylist.isNotEmpty) {
+        songs = savedPlaylist;
+        return songs;
+      }
+    } catch (e) {
+      print(e);
+    }
+
     for (int i = 0; i < length; i++) {
-      Map<String, String> song = await _nextSong();
+      Song song = await _nextSong();
       songs.add(song);
     }
     return songs;
   }
 
-
   @override
-  Future<Map<String, String>> fetchAnotherSong() async {
+  Future<Song> fetchAnotherSong() async {
     return _nextSong();
   }
 
-  Future<Map<String, String>> _nextSong() async {
+  Future<String> getMusicPath(String id) async {
+    Directory? dir = await getExternalStorageDirectory();
+    if (dir == null) throw Exception("External storage not found");
+
+    String localPath = "${dir.path}/$id.mp3";
+    if (await File(localPath).exists()) {
+      return localPath;
+    }
+    return "$_musicServerUrl/music/play?v=$id";
+  }
+
+  Future<Song> _nextSong() async {
     if (_musicServerUrl == '') {
       await _populateMusicServerUrl();
     }
 
     Response response = await _dio.get(_musicServerUrl + '/music/random_song');
     final musicData = response.data;
-    print('>>>> music URL = ${_musicServerUrl + musicData['url'].toString()}');
-    return {
-      'id': musicData['id'].toString(),
-      'title': musicData['title'].toString(),
-      'album': musicData['channel']['name'].toString(),
-      'url': _musicServerUrl + musicData['url'].toString(),
-    };
-  }
-}
 
-class DemoPlaylist extends PlaylistRepository {
-  @override
-  Future<List<Map<String, String>>> fetchInitialPlaylist(
-      {int length = 3}) async {
-    return List.generate(length, (index) => _nextSong());
-  }
+    String _musicPath = await getMusicPath(musicData['id'].toString());
+    bool isLocalPath = _musicPath.startsWith('/');
 
-  @override
-  Future<Map<String, String>> fetchAnotherSong() async {
-    return _nextSong();
-  }
-
-  var _songIndex = 0;
-  static const _maxSongNumber = 16;
-
-  Map<String, String> _nextSong() {
-    _songIndex = (_songIndex % _maxSongNumber) + 1;
-    return {
-      'id': _songIndex.toString().padLeft(3, '0'),
-      'title': 'Song $_songIndex',
-      'album': 'SoundHelix',
-      'url':
-          'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-$_songIndex.mp3',
-    };
+    return Song(
+      id: musicData['id'].toString(),
+      title: musicData['title'].toString(),
+      album: musicData['album'].toString(),
+      url: _musicPath,
+      isLocalPath: isLocalPath,
+    );
   }
 }

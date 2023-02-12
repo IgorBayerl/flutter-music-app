@@ -1,7 +1,9 @@
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
 
+import '../../interfaces/Song.dart';
 import '../../notifiers/progress_notifier.dart';
+import '../../services/download_service.dart';
 import '../../services/page_manager.dart';
 import '../../services/playlist_service.dart';
 import '../../services/service_locator.dart';
@@ -50,6 +52,22 @@ class Playlist extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pageManager = getIt<PageManager>();
+    final downloadService = getIt<DownloadService>();
+
+    void handleDownload(int index) async {
+      print('Download button pressed for song at index $index');
+      final song = pageManager.playlistNotifier.value[index];
+      await downloadService.downloadMusic(song.url);
+      print('Download complete for song at index $index');
+    }
+
+    void handleDelete(int index) async {
+      print('Delete button pressed for song at index $index');
+      final song = pageManager.playlistNotifier.value[index];
+      await downloadService.deleteMusic(song.url);
+      print('Delete complete for song at index $index');
+    }
+
     return Expanded(
       child: ValueListenableBuilder<List<Song>>(
         valueListenable: pageManager.playlistNotifier,
@@ -57,6 +75,7 @@ class Playlist extends StatelessWidget {
           return ListView.builder(
             itemCount: playlistTitles.length,
             itemBuilder: (context, index) {
+              //TODO: Each item will be a button that will play the song
               return Container(
                 color: index % 2 == 0 ? Colors.grey[300] : Colors.transparent,
                 child: Column(
@@ -65,11 +84,17 @@ class Playlist extends StatelessWidget {
                       title: Text(playlistTitles[index].title),
                       subtitle: Text(playlistTitles[index].album),
                     ),
-                    Text(playlistTitles[index].url)
-                    // TextButton(
-                    //   onPressed: () => print(index),
-                    //   child: Text('Download'),
-                    // ),
+                    Text(playlistTitles[index].url),
+                    if (playlistTitles[index].isLocalPath)
+                      TextButton(
+                        onPressed: () => handleDelete(index),
+                        child: Text('Delete'),
+                      )
+                    else
+                      TextButton(
+                        onPressed: () => handleDownload(index),
+                        child: Text('Download'),
+                      ),
                   ],
                 ),
               );

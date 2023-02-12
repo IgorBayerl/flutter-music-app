@@ -1,29 +1,17 @@
 import 'package:flutter/foundation.dart';
+import 'package:get_it/get_it.dart';
+import '../interfaces/Song.dart';
 import '../notifiers/play_button_notifier.dart';
 import '../notifiers/progress_notifier.dart';
 import '../notifiers/repeat_button_notifier.dart';
 import 'package:audio_service/audio_service.dart';
 import 'playlist_repository.dart';
+import 'playlist_service.dart';
 import 'service_locator.dart';
-
-class Song {
-  final String id;
-  final String title;
-  final String album;
-  final String url;
-
-  Song({
-    required this.id,
-    required this.title,
-    required this.album,
-    required this.url,
-  });
-}
 
 class PageManager {
   // Listeners: Updates going to the UI
   final currentSongTitleNotifier = ValueNotifier<String>('');
-  // final playlistNotifier = ValueNotifier<List<String>>([]);
   final playlistNotifier = ValueNotifier<List<Song>>([]);
   final progressNotifier = ProgressNotifier();
   final repeatButtonNotifier = RepeatButtonNotifier();
@@ -50,27 +38,23 @@ class PageManager {
     final playlist = await songRepository.fetchInitialPlaylist();
     final mediaItems = playlist
         .map((song) => MediaItem(
-              id: song['id'] ?? '',
-              album: song['album'] ?? '',
-              title: song['title'] ?? '',
-              extras: {'url': song['url']},
+              id: song.id,
+              album: song.album,
+              title: song.title,
+              extras: {
+                'url': song.url,
+                'isLocalPath': song.isLocalPath,
+              },
             ))
         .toList();
     _audioHandler.addQueueItems(mediaItems);
   }
 
-  // void _listenToChangesInPlaylist() {
-  //   _audioHandler.queue.listen((playlist) {
-  //     if (playlist.isEmpty) {
-  //       playlistNotifier.value = [];
-  //       currentSongTitleNotifier.value = '';
-  //     } else {
-  //       final newList = playlist.map((item) => item.title).toList();
-  //       playlistNotifier.value = newList;
-  //     }
-  //     _updateSkipButtons();
-  //   });
-  // }
+  static void _updateLocalPlaylist(List<Song> playlist) async {
+    PlaylistService _playlistService = GetIt.instance<PlaylistService>();
+    _playlistService.savePlaylist(playlist);
+  }
+
   void _listenToChangesInPlaylist() {
     _audioHandler.queue.listen((playlist) {
       if (playlist.isEmpty) {
@@ -83,11 +67,13 @@ class PageManager {
                   album: item.album!,
                   title: item.title,
                   url: item.extras!['url'],
+                  isLocalPath: item.extras!['isLocalPath'],
                 ))
             .toList();
         playlistNotifier.value = newList;
       }
       _updateSkipButtons();
+      _updateLocalPlaylist(playlistNotifier.value);
     });
   }
 
@@ -204,11 +190,15 @@ class PageManager {
   Future<void> add() async {
     final songRepository = getIt<PlaylistRepository>();
     final song = await songRepository.fetchAnotherSong();
+    //TODO: here we can add the arts of the song in the future
     final mediaItem = MediaItem(
-      id: song['id'] ?? '',
-      album: song['album'] ?? '',
-      title: song['title'] ?? '',
-      extras: {'url': song['url']},
+      id: song.id,
+      album: song.album,
+      title: song.title,
+      extras: {
+        'url': song.url,
+        'isLocalPath': song.isLocalPath,
+      },
     );
     _audioHandler.addQueueItem(mediaItem);
   }
