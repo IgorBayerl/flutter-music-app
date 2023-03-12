@@ -75,15 +75,17 @@ class Playlist extends PlaylistRepository {
     Response response = await _dio.get(_musicServerUrl + '/music/random_song');
     final musicData = response.data;
 
-    String _musicPath = await getMusicPath(musicData['id'].toString());
-    bool isLocalPath = _musicPath.startsWith('/');
+    // String _musicPath = await getMusicPath(musicData['id'].toString());
+    // bool isLocalPath = _musicPath.startsWith('/');
+
+    final _remotePath = _musicServerUrl + musicData['url'].toString();
 
     return Song(
       id: musicData['id'].toString(),
       title: musicData['title'].toString(),
       album: musicData['album'].toString(),
-      url: _musicPath,
-      isLocalPath: isLocalPath,
+      remotePath: _remotePath,
+      songServerUrl: _musicServerUrl,
     );
   }
 }

@@ -42,8 +42,10 @@ class PageManager {
               album: song.album,
               title: song.title,
               extras: {
-                'url': song.url,
+                'remotePath': song.remotePath,
+                'localPath': song.localPath,
                 'isLocalPath': song.isLocalPath,
+                'songServerUrl': song.songServerUrl,
               },
             ))
         .toList();
@@ -66,8 +68,9 @@ class PageManager {
                   id: item.id,
                   album: item.album!,
                   title: item.title,
-                  url: item.extras!['url'],
-                  isLocalPath: item.extras!['isLocalPath'],
+                  remotePath: item.extras!['remotePath'],
+                  localPath: item.extras!['localPath'],
+                  songServerUrl: item.extras!['songServerUrl'],
                 ))
             .toList();
         playlistNotifier.value = newList;
@@ -196,8 +199,10 @@ class PageManager {
       album: song.album,
       title: song.title,
       extras: {
-        'url': song.url,
+        'remotePath': song.remotePath,
+        'localPath': song.localPath,
         'isLocalPath': song.isLocalPath,
+        'songServerUrl': song.songServerUrl,
       },
     );
     _audioHandler.addQueueItem(mediaItem);
@@ -217,7 +222,8 @@ class PageManager {
     _audioHandler.stop();
   }
 
-  void playFromMediaId(int mediaId) {
-    _audioHandler.skipToQueueItem(mediaId);
+  void playFromMediaId(int mediaId) async {
+    await _audioHandler.skipToQueueItem(mediaId);
+    _audioHandler.play();
   }
 }

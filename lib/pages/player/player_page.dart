@@ -57,15 +57,15 @@ class Playlist extends StatelessWidget {
     void handleDownload(int index) async {
       print('Download button pressed for song at index $index');
       final song = pageManager.playlistNotifier.value[index];
-      await downloadService.downloadMusic(song.url);
-      print('Download complete for song at index $index');
+      await downloadService.downloadMusic(song.remotePath);
+      print('Download is complete for song at index $index');
     }
 
     void handleDelete(int index) async {
       print('Delete button pressed for song at index $index');
       final song = pageManager.playlistNotifier.value[index];
-      await downloadService.deleteMusic(song.url);
-      print('Delete complete for song at index $index');
+      await downloadService.deleteMusic(song.localPath);
+      print('Delete is complete for song at index $index');
     }
 
     void handlePlay(int index) {
@@ -88,16 +88,18 @@ class Playlist extends StatelessWidget {
                       title: Text(playlistTitles[index].title),
                       subtitle: Text(playlistTitles[index].album),
                     ),
-                    Text(playlistTitles[index].url),
-                    if (playlistTitles[index].isLocalPath)
-                      TextButton(
-                        onPressed: () => handleDelete(index),
-                        child: Text('Delete'),
-                      )
-                    else
+                    // TODO:remove this lines
+                    Text(playlistTitles[index].localPath),
+                    Text(playlistTitles[index].remotePath),
+                    if (playlistTitles[index].localPath.isEmpty)
                       TextButton(
                         onPressed: () => handleDownload(index),
                         child: Text('Download'),
+                      )
+                    else
+                      TextButton(
+                        onPressed: () => handleDelete(index),
+                        child: Text('Delete'),
                       ),
                     TextButton(
                       onPressed: () => handlePlay(index),

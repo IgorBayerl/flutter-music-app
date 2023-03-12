@@ -18,6 +18,7 @@ dependencies:
   dio: ^4.0.6
   path_provider: ^2.0.12
   open_file: ^3.2.1
+  flutter_secure_storage: ^8.0.0
 
 dev_dependencies:
   flutter_lints: ^1.0.3

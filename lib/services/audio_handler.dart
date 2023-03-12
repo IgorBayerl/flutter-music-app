@@ -165,8 +165,18 @@ class MyAudioHandler extends BaseAudioHandler {
   }
 
   UriAudioSource _createAudioSource(MediaItem mediaItem) {
+    final _remotePath = mediaItem.extras!['remotePath'] as String;
+    final _localPath = mediaItem.extras!['localPath'] as String;
+
+    if (_localPath.isNotEmpty) {
+      return AudioSource.uri(
+        Uri.parse(_localPath),
+        tag: mediaItem,
+      );
+    }
+
     return AudioSource.uri(
-      Uri.parse(mediaItem.extras!['url']),
+      Uri.parse(_remotePath),
       tag: mediaItem,
     );
   }

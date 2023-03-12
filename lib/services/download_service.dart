@@ -16,8 +16,13 @@ class DownloadService {
 
       Directory? dir = await getExternalStorageDirectory();
       if (dir == null) throw Exception("External storage not found");
-
       String filePath = "${dir.path}/$fileName.mp3";
+
+      // verify if the file already exists
+      File file = File(filePath);
+      if (await file.exists()) {
+        await deleteMusic(filePath);
+      }
 
       await dio.download(musicUrl, filePath,
           onReceiveProgress: (received, total) {
@@ -27,7 +32,7 @@ class DownloadService {
       });
       print("Download completed: $filePath");
     } catch (e) {
-      print(e);
+      print(">> error downloading music: ${e.toString()}");
     }
   }
 
