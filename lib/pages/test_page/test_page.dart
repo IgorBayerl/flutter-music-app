@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../models/Playlist.dart';
+import '../../models/playlist.dart';
 import '../../models/song.dart';
 
 class TestPage extends StatefulWidget {
@@ -39,6 +39,15 @@ class _TestPageState extends State<TestPage> {
       duration: Duration(seconds: 300),
       sizeInBytes: 10000000,
     ),
+    Song(
+      id: '4',
+      title: 'Song 4',
+      album: 'Album 4',
+      artist: 'Artist 4',
+      remotePath: 'https://example.com/song4.mp3',
+      duration: Duration(seconds: 400),
+      sizeInBytes: 10000000,
+    ),
   ];
 
   final Playlist _playlist = Playlist(
@@ -74,7 +83,7 @@ class _TestPageState extends State<TestPage> {
               onPressed: () {
                 // Add a song to the playlist
                 setState(() {
-                  _playlist.addSong(_songs[0]);
+                  _playlist.addSong(_songs[_playlist.songs.length]);
                 });
               },
               child: Text('Add Song to Playlist'),
@@ -83,7 +92,7 @@ class _TestPageState extends State<TestPage> {
               onPressed: () {
                 // Remove a song from the playlist
                 setState(() {
-                  _playlist.removeSong('1');
+                  _playlist.removeSong(_playlist.songs.last.id.toString());
                 });
               },
               child: Text('Remove Song from Playlist'),
@@ -101,9 +110,18 @@ class _TestPageState extends State<TestPage> {
                   return ListTile(
                     title: Text(song.title),
                     subtitle: Text(song.artist),
+                    trailing: FloatingActionButton(
+                      child: Icon(Icons.delete),
+                      onPressed: () {
+                        // Remove the song from the playlist
+                        setState(() {
+                          _playlist.removeSong(song.id.toString());
+                        });
+                      },
+                    ),
                     onTap: () {
                       // Play the song
-                      print('Playing ${song.title}');
+                      print('Pressed ${song.title}');
                     },
                   );
                 },

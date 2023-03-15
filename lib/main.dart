@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_service_demo/pages/downloaded/downloaded.dart';
+import 'package:flutter_audio_service_demo/pages/library/library_page.dart';
 import 'pages/settings/settings_page.dart';
 import 'pages/test_page/test_page.dart';
 import 'services/page_manager.dart';
@@ -21,7 +22,8 @@ class _MyAppState extends State<MyApp> {
   int _selectedPage = 1;
   final List<Widget> _pages = [
     // DownloadedSongsWidget(),
-    TestPage(),
+    // TestPage(),
+    LibraryPage(),
     MusicPlayer(),
     SettingsPage(),
   ];
