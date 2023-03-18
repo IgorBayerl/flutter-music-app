@@ -7,6 +7,7 @@ import '../../models/library.dart';
 import '../../models/playlist.dart';
 import '../../models/song.dart';
 import 'add_song_page.dart';
+import 'playlist_page.dart';
 
 class LibraryPage extends StatefulWidget {
   @override
@@ -38,7 +39,7 @@ class _LibraryPageState extends State<LibraryPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('New Playlist'),
+          title: Text('New Playlist Name'),
           content: TextField(controller: _playlistNameController),
           actions: <Widget>[
             TextButton(
@@ -69,7 +70,8 @@ class _LibraryPageState extends State<LibraryPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Confirm Delete'),
-          content: Text('Are you sure you want to delete this playlist?'),
+          content: Text(
+              'Are you sure you want to delete the playlist ${playlist.title}? This action cannot be undone.  \n\nThe downloaded musics will not be deleted from your device! You will be able to find them in the "Downloads" section.'),
           actions: <Widget>[
             TextButton(
               child: Text('Cancel'),
@@ -138,117 +140,3 @@ class _LibraryPageState extends State<LibraryPage> {
   }
 }
 
-//TODO: Put this widget in its own file
-class PlaylistPage extends StatefulWidget {
-  final Playlist playlist;
-
-  const PlaylistPage({Key? key, required this.playlist}) : super(key: key);
-
-  @override
-  _PlaylistPageState createState() => _PlaylistPageState();
-}
-
-class _PlaylistPageState extends State<PlaylistPage> {
-  late Playlist _playlist;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPlaylist();
-  }
-
-  Future<void> _loadPlaylist() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final playlistJson = prefs.getString(widget.playlist.title);
-    if (playlistJson != null) {
-      setState(() {
-        _playlist = Playlist.fromJson(jsonDecode(playlistJson));
-      });
-    } else {
-      // If the playlist doesn't exist, create an empty one
-      setState(() {
-        _playlist = Playlist(
-          id: widget.playlist.id,
-          title: widget.playlist.title,
-          songs: [],
-        );
-      });
-      _savePlaylist();
-    }
-  }
-
-  Future<void> _savePlaylist() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(widget.playlist.id, jsonEncode(_playlist.toJson()));
-  }
-
-  void _addSong() async {
-    print(">>> addSong");
-    final song = await Navigator.push<Song>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddSongPage(),
-      ),
-    );
-    if (song != null) {
-      setState(() {
-        _playlist.addSong(song);
-      });
-      _savePlaylist();
-    }
-  }
-
-  void _removeSong(String songId) {
-    setState(() {
-      _playlist.removeSong(songId);
-    });
-    _savePlaylist();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_playlist.title),
-      ),
-      body: ListView.builder(
-        itemCount: _playlist.songs.length,
-        itemBuilder: (BuildContext context, int index) {
-          final song = _playlist.songs[index];
-          return Dismissible(
-            key: Key(song.id),
-            direction: DismissDirection.endToStart,
-            onDismissed: (direction) => _removeSong(song.id),
-            background: Container(
-              color: Colors.red,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: Icon(
-                    Icons.delete,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-            child: ListTile(
-              title: Text(song.title),
-              subtitle: Text(song.artist),
-              trailing: Text(song.duration.inMinutes.remainder(60).toString() +
-                  ':' +
-                  song.duration.inSeconds
-                      .remainder(60)
-                      .toString()
-                      .padLeft(2, '0')),
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addSong,
-        child: Icon(Icons.add),
-      ),
-    );
-  }
-}

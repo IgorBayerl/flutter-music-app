@@ -11,7 +11,7 @@ class Library {
   Future<List<Playlist>> loadPlaylists() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String> playlistsStringList = prefs.getStringList('playlists') ?? [];
-
+    print(playlistsStringList);
     List<Playlist> playlists = playlistsStringList
         .map((playlistString) => Playlist.fromJson(json.decode(playlistString)))
         .toList();

@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
-
 import '../../models/song.dart';
 
 class AddSongPage extends StatefulWidget {
-  const AddSongPage({Key? key}) : super(key: key);
-
   @override
   _AddSongPageState createState() => _AddSongPageState();
 }
 
 class _AddSongPageState extends State<AddSongPage> {
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _artistController = TextEditingController();
-  final TextEditingController _durationController = TextEditingController();
-  final TextEditingController _sizeInBytesController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  late String _title;
+  late String _album;
+  late String _artist;
+  late String _remotePath;
+  late String _songServerUrl;
+  late Duration _duration;
+  late int _sizeInBytes;
+  late String _artworkUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -21,74 +24,151 @@ class _AddSongPageState extends State<AddSongPage> {
       appBar: AppBar(
         title: Text('Add Song'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                labelText: 'Title',
-              ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFormField(
+                  initialValue: 'Title Test',
+                  decoration: InputDecoration(labelText: 'Title'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a title';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _title = value!;
+                  },
+                ),
+                TextFormField(
+                  initialValue: 'Album Test',
+                  decoration: InputDecoration(labelText: 'Album'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter an album';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _album = value!;
+                  },
+                ),
+                TextFormField(
+                  initialValue: 'Artist Test',
+                  decoration: InputDecoration(labelText: 'Artist'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter an artist';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _artist = value!;
+                  },
+                ),
+                TextFormField(
+                  initialValue: 'Remote Path Test',
+                  decoration: InputDecoration(labelText: 'Remote Path'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a remote path';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _remotePath = value!;
+                  },
+                ),
+                TextFormField(
+                  initialValue: 'Song Server URL Test',
+                  decoration: InputDecoration(labelText: 'Song Server URL'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a song server URL';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _songServerUrl = value!;
+                  },
+                ),
+                TextFormField(
+                  initialValue: '30',
+                  decoration: InputDecoration(labelText: 'Duration'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a duration';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _duration = Duration(seconds: int.parse(value!));
+                  },
+                ),
+                TextFormField(
+                  initialValue: '50',
+                  decoration: InputDecoration(labelText: 'Size in Bytes'),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a size in bytes';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _sizeInBytes = int.parse(value!);
+                  },
+                ),
+                TextFormField(
+                  initialValue: 'Artwork URL Test',
+                  decoration: InputDecoration(labelText: 'Artwork URL'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter an artwork URL';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    _artworkUrl = value!;
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      print('Submit button pressed');
+                      print('>>>> 0');
+                      if (_formKey.currentState!.validate()) {
+                        print('>>>> 1');
+                        _formKey.currentState!.save();
+                        print('>>>> 2');
+                        final song = Song(
+                          id: UniqueKey().toString(),
+                          title: _title,
+                          album: _album,
+                          artist: _artist,
+                          remotePath: _remotePath,
+                          songServerUrl: _songServerUrl,
+                          duration: _duration,
+                          sizeInBytes: _sizeInBytes,
+                          artworkUrl: _artworkUrl,
+                        );
+                        print('>>>> 3');
+                        Navigator.pop(context, song);
+                      }
+                    },
+                    child: Text('Submit'),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 16.0),
-            TextField(
-              controller: _artistController,
-              decoration: InputDecoration(
-                labelText: 'Artist',
-              ),
-            ),
-            SizedBox(height: 16.0),
-            TextField(
-              controller: _durationController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Duration (seconds)',
-              ),
-            ),
-            SizedBox(height: 16.0),
-            TextField(
-              controller: _sizeInBytesController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Size (bytes)',
-              ),
-            ),
-            SizedBox(height: 32.0),
-            ElevatedButton(
-              onPressed: () {
-                String title = _titleController.text;
-                String artist = _artistController.text;
-                int duration = int.tryParse(_durationController.text) ?? 0;
-                int sizeInBytes =
-                    int.tryParse(_sizeInBytesController.text) ?? 0;
-
-                if (title.isNotEmpty &&
-                    artist.isNotEmpty &&
-                    duration > 0 &&
-                    sizeInBytes > 0) {
-                  Song song = Song(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    title: title,
-                    artist: artist,
-                    duration: Duration(seconds: duration),
-                    sizeInBytes: sizeInBytes,
-                    album: '',
-                    remotePath: '',
-                  );
-                  Navigator.pop(context);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Please fill in all fields.'),
-                    ),
-                  );
-                }
-              },
-              child: Text('Add Song'),
-            ),
-          ],
+          ),
         ),
       ),
     );
