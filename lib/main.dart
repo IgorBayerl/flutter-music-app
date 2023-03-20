@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_audio_service_demo/pages/downloaded/downloaded.dart';
 import 'package:flutter_audio_service_demo/pages/library/library_page.dart';
+import 'package:flutter_audio_service_demo/pages/search/search_page.dart';
 import 'pages/settings/settings_page.dart';
 import 'pages/test_page/test_page.dart';
 import 'services/page_manager.dart';
@@ -23,6 +24,7 @@ class _MyAppState extends State<MyApp> {
   final List<Widget> _pages = [
     // DownloadedSongsWidget(),
     // TestPage(),
+    SearchPage(),
     LibraryPage(),
     MusicPlayer(),
     SettingsPage(),
@@ -63,17 +65,26 @@ class _MyAppState extends State<MyApp> {
         bottomNavigationBar: BottomNavigationBar(
           items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.library_music),
+              icon: Icon(Icons.search, color: Colors.white),
               label: 'Search',
+              backgroundColor: Colors.green,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.play_arrow),
+              icon: Icon(Icons.library_music, color: Colors.white),
+              label: 'Library',
+              backgroundColor: Colors.purple,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.play_arrow, color: Colors.white),
               label: 'Player',
+              backgroundColor: Colors.pink,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
+              icon: Icon(Icons.settings, color: Colors.white),
               label: 'Settings',
+              backgroundColor: Colors.red,
             ),
+            
           ],
           currentIndex: _selectedPage,
           onTap: (index) {

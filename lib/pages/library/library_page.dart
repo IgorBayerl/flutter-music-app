@@ -87,10 +87,22 @@ class _LibraryPageState extends State<LibraryPage> {
     );
     if (confirmDelete != null && confirmDelete) {
       bool success = await _library.deletePlaylist(playlist.id);
-      print('>>> playlist deleted: $success');
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete playlist'),
+          ),
+        );
+        return;
+      }
       setState(() {
         _playlists.remove(playlist);
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Playlist deleted'),
+        ),
+      );
     }
   }
 

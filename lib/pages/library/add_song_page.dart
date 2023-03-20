@@ -142,12 +142,8 @@ class _AddSongPageState extends State<AddSongPage> {
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                   child: ElevatedButton(
                     onPressed: () {
-                      print('Submit button pressed');
-                      print('>>>> 0');
                       if (_formKey.currentState!.validate()) {
-                        print('>>>> 1');
                         _formKey.currentState!.save();
-                        print('>>>> 2');
                         final song = Song(
                           id: UniqueKey().toString(),
                           title: _title,
@@ -159,7 +155,6 @@ class _AddSongPageState extends State<AddSongPage> {
                           sizeInBytes: _sizeInBytes,
                           artworkUrl: _artworkUrl,
                         );
-                        print('>>>> 3');
                         Navigator.pop(context, song);
                       }
                     },

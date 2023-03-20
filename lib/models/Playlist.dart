@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'song.dart';
 
 class Playlist {
@@ -19,6 +23,28 @@ class Playlist {
   /// Remove a song from the playlist by ID
   void removeSong(String songId) {
     songs.removeWhere((song) => song.id == songId);
+  }
+
+  /// Load a playlist from shared preferences
+  /// The musics are not loaded by default because it would be too slow when loading all the playlists
+  Future<Playlist> load() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final playlistJson = prefs.getString(this.id);
+    if (playlistJson != null) {
+      return Playlist.fromJson(jsonDecode(playlistJson));
+    } else {
+      // If the playlist doesn't exist, create an empty one
+      return Playlist(
+        id: this.id,
+        title: this.title,
+        songs: [],
+      );
+    }
+  }
+
+  Future<void> save() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString(this.id, jsonEncode(this.toJson()));
   }
 
   /// Get the total duration of the playlist

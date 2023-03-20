@@ -52,7 +52,6 @@ class _PlaylistPageState extends State<PlaylistPage> {
   }
 
   void _addSong() async {
-    print(">>> addSong");
     final song = await Navigator.push<Song>(
       context,
       MaterialPageRoute(
@@ -63,8 +62,10 @@ class _PlaylistPageState extends State<PlaylistPage> {
       setState(() {
         _playlist.addSong(song);
       });
-      // TODO: Show a toast message to confirm the song was added
-      _savePlaylist();
+      await _savePlaylist();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: const Text('Song added!')),
+      );
     }
   }
 
@@ -73,27 +74,11 @@ class _PlaylistPageState extends State<PlaylistPage> {
       _playlist.removeSong(songId);
     });
     _savePlaylist();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: const Text('Song removed!')),
+    );
   }
 
-  // void addSongToPlaylist(BuildContext context, Playlist playlist) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return Dialog(
-  //         child: AddSongPage(),
-  //       );
-  //     },
-  //   ).then((song) {
-  //     if (song != null) {
-  //       playlist.addSong(song);
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text('Song added to playlist'),
-  //         ),
-  //       );
-  //     }
-  //   });
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -101,43 +86,71 @@ class _PlaylistPageState extends State<PlaylistPage> {
       appBar: AppBar(
         title: Text(_playlist.title),
       ),
-      body: ListView.builder(
-        itemCount: _playlist.songs.length,
-        itemBuilder: (BuildContext context, int index) {
-          final song = _playlist.songs[index];
-          return Dismissible(
-            key: Key(song.id),
-            direction: DismissDirection.endToStart,
-            onDismissed: (direction) => _removeSong(song.id),
-            background: Container(
-              color: Colors.red,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: Icon(
-                    Icons.delete,
-                    color: Colors.white,
-                  ),
-                ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  // TODO: Implement play button logic
+                },
+                child: Text("Play"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // TODO: Implement play random button logic
+                },
+                child: Text("Play random"),
+              ),
+            ],
+          ),
+          Expanded(
+            child: Container(
+              color: Colors.grey[200],
+              child: ListView.builder(
+                itemCount: _playlist.songs.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final song = _playlist.songs[index];
+                  return Dismissible(
+                    key: Key(song.id),
+                    direction: DismissDirection.endToStart,
+                    onDismissed: (direction) => _removeSong(song.id),
+                    background: Container(
+                      color: Colors.red,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 16.0),
+                          child: Icon(
+                            Icons.delete,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    child: ListTile(
+                      title: Text(song.title),
+                      subtitle: Text(song.artist),
+                      trailing: Text(
+                        song.duration.inMinutes.remainder(60).toString() +
+                            ':' +
+                            song.duration.inSeconds
+                                .remainder(60)
+                                .toString()
+                                .padLeft(2, '0'),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            child: ListTile(
-              title: Text(song.title),
-              subtitle: Text(song.artist),
-              trailing: Text(song.duration.inMinutes.remainder(60).toString() +
-                  ':' +
-                  song.duration.inSeconds
-                      .remainder(60)
-                      .toString()
-                      .padLeft(2, '0')),
-            ),
-          );
-        },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addSong,
-        // onPressed: () => addSongToPlaylist(context, _playlist),
         child: Icon(Icons.add),
       ),
     );
