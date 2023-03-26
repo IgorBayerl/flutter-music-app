@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'song.dart';
@@ -42,6 +43,17 @@ class Playlist {
     }
   }
 
+  static Future<Playlist> getPlaylistFromId(String playlistId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final playlistJson = prefs.getString(playlistId);
+    if (playlistJson != null) {
+      return Playlist.fromJson(jsonDecode(playlistJson));
+    } else {
+      // If the playlist doesn't exist, throw an error
+      throw Exception("Playlist not found with ID: $playlistId");
+    }
+  }
+
   Future<void> save() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString(this.id, jsonEncode(this.toJson()));
@@ -71,6 +83,14 @@ class Playlist {
       id: json['id'] as String,
       title: json['title'] as String,
       songs: songs,
+    );
+  }
+
+  factory Playlist.empty() {
+    return Playlist(
+      id: '',
+      title: '',
+      songs: [],
     );
   }
 

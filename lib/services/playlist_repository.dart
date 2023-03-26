@@ -1,91 +1,117 @@
-import 'dart:io';
+// //TODO: this file is not used anymore, delete it
 
-import 'package:dio/dio.dart';
-import 'package:flutter_audio_service_demo/services/page_manager.dart';
-import 'package:get_it/get_it.dart';
-import 'package:path_provider/path_provider.dart';
+// import 'dart:io';
 
-import '../interfaces/Song.dart';
-import 'playlist_service.dart';
-import 'settings_service.dart';
+// import 'package:dio/dio.dart';
+// import 'package:flutter_audio_service_demo/services/page_manager.dart';
+// import 'package:get_it/get_it.dart';
+// import 'package:path_provider/path_provider.dart';
 
-abstract class PlaylistRepository {
-  Future<List<Song>> fetchInitialPlaylist();
-  Future<Song> fetchAnotherSong();
-}
+// import '../models/song.dart';
+// import 'playlist_service.dart';
+// import 'settings_service.dart';
 
-class Playlist extends PlaylistRepository {
-  // 'http://10.0.2.2:3000' localhost in android emulator
-  String _musicServerUrl = '';
+// import '../models/playlist.dart';
+// import '../models/song.dart';
 
-  final Dio _dio = Dio();
+// abstract class PlaylistRepository {
+//   Future<Playlist> fetchInitialPlaylist();
+//   Future<Song> fetchAnotherSong();
+// }
 
-  Playlist() {
-    _populateMusicServerUrl();
-  }
+// class Playlist extends PlaylistRepository {
+//   @override
+//   Future<Playlist> fetchInitialPlaylist() async {
+//     Playlist _playlist = Playlist(
 
-  Future<void> _populateMusicServerUrl() async {
-    SettingsService _settingsService = GetIt.instance<SettingsService>();
-    _musicServerUrl = await _settingsService.getMusicServerUrl();
-  }
+//     );
+//   }
 
-  @override
-  Future<List<Song>> fetchInitialPlaylist({int length = 3}) async {
-    List<Song> songs = [];
+//   @override
+//   Future<Song> fetchAnotherSong() async {
+//     return Song(
+//       id: '4',
+//       title: 'Song 4',
+//       artist: 'Artist 4',
+//       album: 'Album 4',
+//       duration: 400,
+//       path: 'path',
+//     );
+//   }
+// }
 
-    try {
-      PlaylistService _playlistService = GetIt.instance<PlaylistService>();
-      final savedPlaylist = await _playlistService.loadPlaylist();
-      if (savedPlaylist.isNotEmpty) {
-        songs = savedPlaylist;
-        return songs;
-      }
-    } catch (e) {
-      print(e);
-    }
+// class Playlist extends PlaylistRepository {
+//   // 'http://10.0.2.2:3000' localhost in android emulator
+//   String _musicServerUrl = '';
 
-    for (int i = 0; i < length; i++) {
-      Song song = await _nextSong();
-      songs.add(song);
-    }
-    return songs;
-  }
+//   final Dio _dio = Dio();
 
-  @override
-  Future<Song> fetchAnotherSong() async {
-    return _nextSong();
-  }
+//   Playlist({required String id}) {
+//     _populateMusicServerUrl();
+//   }
 
-  Future<String> getMusicPath(String id) async {
-    Directory? dir = await getExternalStorageDirectory();
-    if (dir == null) throw Exception("External storage not found");
+//   Future<void> _populateMusicServerUrl() async {
+//     SettingsService _settingsService = GetIt.instance<SettingsService>();
+//     _musicServerUrl = await _settingsService.getMusicServerUrl();
+//   }
 
-    String localPath = "${dir.path}/$id.mp3";
-    if (await File(localPath).exists()) {
-      return localPath;
-    }
-    return "$_musicServerUrl/music/play?v=$id";
-  }
+//   @override
+//   Future<List<Song>> fetchInitialPlaylist({int length = 3}) async {
+//     List<Song> songs = [];
 
-  Future<Song> _nextSong() async {
-    if (_musicServerUrl == '') {
-      await _populateMusicServerUrl();
-    }
+//     try {
+//       PlaylistService _playlistService = GetIt.instance<PlaylistService>();
+//       final savedPlaylist = await _playlistService.loadPlaylist();
+//       if (savedPlaylist.isNotEmpty) {
+//         songs = savedPlaylist;
+//         return songs;
+//       }
+//     } catch (e) {
+//       print(e);
+//     }
 
-    Response response = await _dio.get(_musicServerUrl + '/music/random_song');
-    final musicData = response.data;
+//     for (int i = 0; i < length; i++) {
+//       Song song = await _nextSong();
+//       songs.add(song);
+//     }
+//     return songs;
+//   }
 
-    // String _musicPath = await getMusicPath(musicData['id'].toString());
-    // bool isLocalPath = _musicPath.startsWith('/');
+//   @override
+//   Future<Song> fetchAnotherSong() async {
+//     return _nextSong();
+//   }
 
-    final _remotePath = _musicServerUrl + musicData['url'].toString();
+//   Future<String> getMusicPath(String id) async {
+//     Directory? dir = await getExternalStorageDirectory();
+//     if (dir == null) throw Exception("External storage not found");
 
-    return Song(
-      id: musicData['id'].toString(),
-      title: musicData['title'].toString(),
-      album: musicData['album'].toString(),
-      remotePath: _remotePath,
-      songServerUrl: _musicServerUrl,
-    );
-  }
-}
+//     String localPath = "${dir.path}/$id.mp3";
+//     if (await File(localPath).exists()) {
+//       return localPath;
+//     }
+//     return "$_musicServerUrl/music/play?v=$id";
+//   }
+
+//   Future<Song> _nextSong() async {
+//     if (_musicServerUrl == '') {
+//       await _populateMusicServerUrl();
+//     }
+
+//     Response response = await _dio.get(_musicServerUrl + '/music/random_song');
+//     final musicData = response.data;
+
+//     // String _musicPath = await getMusicPath(musicData['id'].toString());
+//     // bool isLocalPath = _musicPath.startsWith('/');
+
+//     final _remotePath = _musicServerUrl + musicData['url'].toString();
+
+//     return Song(
+//       id: musicData['id'].toString(),
+//       title: musicData['title'].toString(),
+//       album: musicData['album'].toString(),
+//       remotePath: _remotePath,
+//       songServerUrl: _musicServerUrl,
+//     );
+//   }
+// }

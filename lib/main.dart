@@ -20,7 +20,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
 
-  int _selectedPage = 1;
+  int _selectedPage = 2;
   final List<Widget> _pages = [
     // DownloadedSongsWidget(),
     // TestPage(),

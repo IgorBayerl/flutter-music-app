@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class Song {
@@ -63,6 +64,22 @@ class Song {
       duration: Duration(milliseconds: json['duration'] as int),
       sizeInBytes: json['sizeInBytes'] as int,
       artworkUrl: json['artworkUrl'] as String,
+    );
+  }
+
+  factory Song.fromMediaItem(MediaItem mediaItem) {
+    return Song(
+      id: mediaItem.id,
+      title: mediaItem.title,
+      album: mediaItem.album ?? '',
+      remotePath: mediaItem.extras!['remotePath'],
+      localPath: mediaItem.extras!['localPath'] ?? '',
+      isDownloaded: mediaItem.extras!['isLocalPath'] ?? false,
+      songServerUrl: mediaItem.extras!['songServerUrl'] ?? '',
+      artist: '',
+      duration: mediaItem.duration ?? Duration.zero,
+      sizeInBytes: mediaItem.extras!['sizeInBytes'] ?? 0,
+      artworkUrl: '',
     );
   }
 

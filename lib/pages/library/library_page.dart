@@ -108,6 +108,19 @@ class _LibraryPageState extends State<LibraryPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    void _onPlaylistPressed(Playlist playlist) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (BuildContext context) => PlaylistPage(
+            playlist: playlist,
+          ),
+        ),
+      );
+    }
+
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Library'),
@@ -117,17 +130,7 @@ class _LibraryPageState extends State<LibraryPage> {
         itemBuilder: (BuildContext context, int index) {
           Playlist playlist = _playlists[index];
           return GestureDetector(
-            onTap: () {
-              print('>>> playlist tapped: ${playlist.title}');
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (BuildContext context) => PlaylistPage(
-                    playlist: playlist,
-                  ),
-                ),
-              );
-            },
+            onTap: () => _onPlaylistPressed(playlist),
             onLongPress: () {
               print('>>> playlist long pressed: ${playlist.title}');
               _deletePlaylist(playlist);

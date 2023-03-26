@@ -35,6 +35,8 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _addToPlaylist(Song songInfo, Playlist playlist) async {
+    //TODO: teat the song info
+    //Currently the url is the youtube one and not the local one, or maybe change this in the server
     try {
       final Playlist _newPlaylist = await playlist.load();
       _newPlaylist.addSong(songInfo);
@@ -135,12 +137,14 @@ class _SearchPageState extends State<SearchPage> {
       final _songs = <Song>[];
 
       for (final item in results) {
+        final String _id = item['id'];
+        final String _remotePath = '$_musicServerUrl/music/play?v=$_id';
         final song = Song(
-          id: item['id'],
+          id: _id,
           title: item['title'],
           album: item['channel']['name'],
           artist: item['channel']['name'],
-          remotePath: item['url'],
+          remotePath: _remotePath,
           localPath: '',
           songServerUrl: _musicServerUrl,
           isDownloaded: false,

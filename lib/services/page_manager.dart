@@ -1,18 +1,21 @@
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
-import '../interfaces/Song.dart';
+import 'package:rxdart/src/streams/value_stream.dart';
+import '../models/song.dart';
+import '../models/playlist.dart';
 import '../notifiers/play_button_notifier.dart';
 import '../notifiers/progress_notifier.dart';
 import '../notifiers/repeat_button_notifier.dart';
 import 'package:audio_service/audio_service.dart';
-import 'playlist_repository.dart';
+// import 'playlist_repository.dart';
 import 'playlist_service.dart';
 import 'service_locator.dart';
 
 class PageManager {
   // Listeners: Updates going to the UI
   final currentSongTitleNotifier = ValueNotifier<String>('');
-  final playlistNotifier = ValueNotifier<List<Song>>([]);
+  final currentPlaylistNotifier = ValueNotifier<Playlist>(Playlist.empty());
+
   final progressNotifier = ProgressNotifier();
   final repeatButtonNotifier = RepeatButtonNotifier();
   final isFirstSongNotifier = ValueNotifier<bool>(true);
@@ -24,7 +27,7 @@ class PageManager {
 
   // Events: Calls coming from the UI
   void init() async {
-    await _loadPlaylist();
+    await _loadLastPlayedPlaylist();
     _listenToChangesInPlaylist();
     _listenToPlaybackState();
     _listenToCurrentPosition();
@@ -33,50 +36,85 @@ class PageManager {
     _listenToChangesInSong();
   }
 
-  Future<void> _loadPlaylist() async {
-    final songRepository = getIt<PlaylistRepository>();
-    final playlist = await songRepository.fetchInitialPlaylist();
-    final mediaItems = playlist
-        .map((song) => MediaItem(
-              id: song.id,
-              album: song.album,
-              title: song.title,
-              extras: {
-                'remotePath': song.remotePath,
-                'localPath': song.localPath,
-                'isLocalPath': song.isLocalPath,
-                'songServerUrl': song.songServerUrl,
-              },
-            ))
-        .toList();
+  Future<void> _loadLastPlayedPlaylist() async {
+    List<MediaItem> mediaItems = [];
+    final _playlistService = GetIt.instance<PlaylistService>();
+    final _playlist = await _playlistService.loadLastPlayedPlaylist();
+    // TODO: try to remove this line by updating the currentPlaylistNotifier from the _audioHandler.queue updates
+    // TODO: Without this line the playlist page is not loaded initialy
+    currentPlaylistNotifier.value = _playlist;
+
+    // final _playlistService = GetIt.instance<PlaylistService>();
+    // final _playlist = await _playlistService.loadLastPlayedPlaylist();
+    print('Playlist loaded: ${_playlist.songs.length} songs');
+    _playlist.songs.forEach((song) {
+      mediaItems.add(
+        MediaItem(
+          id: song.id,
+          album: song.album,
+          title: song.title,
+          extras: {
+            'remotePath': song.remotePath,
+            'localPath': song.localPath,
+            'isLocalPath': song.isDownloaded,
+            'songServerUrl': song.songServerUrl,
+          },
+        ),
+      );
+    });
+
     _audioHandler.addQueueItems(mediaItems);
   }
 
-  static void _updateLocalPlaylist(List<Song> playlist) async {
+  void logPlaylist() {
+    print('Playlist: ${_audioHandler.queue.value.length} songs');
+    _audioHandler.queue.value.forEach((song) {
+      print(song.title);
+    });
+  }
+
+  Future<void> updatePlaylist(Playlist playlist) async {
+    clearQueue();
+
+    List<MediaItem> _mediaItems = playlist.songs.map((song) {
+      return MediaItem(
+        id: song.id,
+        album: song.album,
+        title: song.title,
+        extras: {
+          'remotePath': song.remotePath,
+          'localPath': song.localPath,
+          'isLocalPath': song.isDownloaded,
+          'songServerUrl': song.songServerUrl,
+        },
+      );
+    }).toList();
+    // TODO: Without this line the playlist page is not loaded when click in the play button in playlists page
+    currentPlaylistNotifier.value = playlist;
+
+    await _audioHandler.addQueueItems(_mediaItems);
+
+    // TODO: investigate why this is needed
+    // wait half a second and play, otherwise the player will not start
+    await Future.delayed(Duration(milliseconds: 500));
+    await _audioHandler.play();
+  }
+
+  static void _updateLocalPlaylist(Playlist playlist) async {
     PlaylistService _playlistService = GetIt.instance<PlaylistService>();
     _playlistService.savePlaylist(playlist);
   }
 
   void _listenToChangesInPlaylist() {
-    _audioHandler.queue.listen((playlist) {
-      if (playlist.isEmpty) {
-        playlistNotifier.value = [];
-        currentSongTitleNotifier.value = '';
-      } else {
-        final newList = playlist
-            .map((item) => Song(
-                  id: item.id,
-                  album: item.album!,
-                  title: item.title,
-                  remotePath: item.extras!['remotePath'],
-                  localPath: item.extras!['localPath'],
-                  songServerUrl: item.extras!['songServerUrl'],
-                ))
-            .toList();
-        playlistNotifier.value = newList;
-      }
+    _audioHandler.queue.listen((List<MediaItem> queue) {
+      final List<Song> _songs =
+          queue.map((mediaItem) => Song.fromMediaItem(mediaItem)).toList();
+
+      final Playlist playlist = Playlist.empty();
+      playlist.songs.addAll(_songs);
+      currentPlaylistNotifier.value = playlist;
+
       _updateSkipButtons();
-      _updateLocalPlaylist(playlistNotifier.value);
     });
   }
 
@@ -190,28 +228,35 @@ class PageManager {
     }
   }
 
-  Future<void> add() async {
-    final songRepository = getIt<PlaylistRepository>();
-    final song = await songRepository.fetchAnotherSong();
-    //TODO: here we can add the arts of the song in the future
-    final mediaItem = MediaItem(
-      id: song.id,
-      album: song.album,
-      title: song.title,
-      extras: {
-        'remotePath': song.remotePath,
-        'localPath': song.localPath,
-        'isLocalPath': song.isLocalPath,
-        'songServerUrl': song.songServerUrl,
-      },
-    );
-    _audioHandler.addQueueItem(mediaItem);
-  }
+  // Future<void> add() async {
+  //   final songRepository = getIt<PlaylistRepository>();
+  //   final song = await songRepository.fetchAnotherSong();
+  //   //TODO: here we can add the arts of the song in the future
+  //   final mediaItem = MediaItem(
+  //     id: song.id,
+  //     album: song.album,
+  //     title: song.title,
+  //     extras: {
+  //       'remotePath': song.remotePath,
+  //       'localPath': song.localPath,
+  //       'isLocalPath': song.isLocalPath,
+  //       'songServerUrl': song.songServerUrl,
+  //     },
+  //   );
+  //   _audioHandler.addQueueItem(mediaItem);
+  // }
 
   void remove() {
     final lastIndex = _audioHandler.queue.value.length - 1;
     if (lastIndex < 0) return;
     _audioHandler.removeQueueItemAt(lastIndex);
+  }
+
+  void clearQueue() async {
+    final _playlistLength = _audioHandler.queue.value.length + 1;
+    for (var i = 0; i < _playlistLength; i++) {
+      remove();
+    }
   }
 
   void dispose() {
@@ -222,7 +267,7 @@ class PageManager {
     _audioHandler.stop();
   }
 
-  void playFromMediaId(int mediaId) async {
+  void playFromMediaIndex(int mediaId) async {
     await _audioHandler.skipToQueueItem(mediaId);
     _audioHandler.play();
   }

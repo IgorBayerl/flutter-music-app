@@ -1,11 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../models/library.dart';
 import '../../models/playlist.dart';
 import '../../models/song.dart';
+import '../../services/page_manager.dart';
+import '../../services/playlist_service.dart';
+import '../../services/service_locator.dart';
 import 'add_song_page.dart';
 
 class PlaylistPage extends StatefulWidget {
@@ -79,6 +82,21 @@ class _PlaylistPageState extends State<PlaylistPage> {
     );
   }
 
+  Future<void> _playPlaylist() async {
+    //TODO: Add all the musics to the queue
+    // Currently its only defining the playlist as the current one and you should restart the app to play it
+    final pageManager = getIt<PageManager>();
+    String playlistId = _playlist.id;
+
+    // _playlistService.loadPlaylist();
+
+    print("Play playlist $playlistId");
+    pageManager.updatePlaylist(_playlist);
+
+    // TODO: try to move this responsability to the page manager
+    final _playlistService = GetIt.instance<PlaylistService>();
+    await _playlistService.savePlaylist(_playlist);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,12 +113,14 @@ class _PlaylistPageState extends State<PlaylistPage> {
               ElevatedButton(
                 onPressed: () {
                   // TODO: Implement play button logic
+                  _playPlaylist();
                 },
                 child: Text("Play"),
               ),
               ElevatedButton(
                 onPressed: () {
                   // TODO: Implement play random button logic
+                  _playPlaylist();
                 },
                 child: Text("Play random"),
               ),
