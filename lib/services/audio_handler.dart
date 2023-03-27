@@ -17,6 +17,7 @@ class MyAudioHandler extends BaseAudioHandler {
   final _player = AudioPlayer();
   final _playlist = ConcatenatingAudioSource(children: []);
 
+
   MyAudioHandler() {
     _loadEmptyPlaylist();
     _notifyAudioHandlerAboutPlaybackEvents();
@@ -164,19 +165,22 @@ class MyAudioHandler extends BaseAudioHandler {
     queue.add(newQueue);
   }
 
+  @override
+  Future<void> updateQueue(List<MediaItem> mediaItems) async {
+    _playlist.clear();
+    await addQueueItems(mediaItems);
+  }
+
   UriAudioSource _createAudioSource(MediaItem mediaItem) {
-    final _remotePath = mediaItem.extras!['remotePath'] as String;
-    final _localPath = mediaItem.extras!['localPath'] as String;
+    final remotePath = mediaItem.extras!['remotePath'] as String;
+    final localPath = mediaItem.extras!['localPath'] as String;
 
-    if (_localPath.isNotEmpty) {
-      return AudioSource.uri(
-        Uri.parse(_localPath),
-        tag: mediaItem,
-      );
-    }
+    final uri =
+        localPath.isNotEmpty ? Uri.parse(localPath) : Uri.parse(remotePath);
 
+    print(">>>> _createAudioSource remotePath: $uri");
     return AudioSource.uri(
-      Uri.parse(_remotePath),
+      uri,
       tag: mediaItem,
     );
   }
@@ -253,5 +257,14 @@ class MyAudioHandler extends BaseAudioHandler {
   Future<void> stop() async {
     await _player.stop();
     return super.stop();
+  }
+
+  @override
+  Future<void> updateMediaItem(MediaItem mediaItem) async {
+    final index = queue.value.indexOf(mediaItem);
+
+    final newQueue = queue.value;
+    newQueue[index] = mediaItem;
+    queue.add(newQueue);
   }
 }

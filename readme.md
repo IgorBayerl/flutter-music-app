@@ -17,3 +17,6 @@
   - Skip non downloaded songs if offline
 
   - Make a button (play offline) to play the offline songs
+
+
+![diagram test](./diagrams/demo.drawio.png)

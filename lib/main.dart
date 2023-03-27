@@ -3,7 +3,6 @@ import 'package:flutter_audio_service_demo/pages/downloaded/downloaded.dart';
 import 'package:flutter_audio_service_demo/pages/library/library_page.dart';
 import 'package:flutter_audio_service_demo/pages/search/search_page.dart';
 import 'pages/settings/settings_page.dart';
-import 'pages/test_page/test_page.dart';
 import 'services/page_manager.dart';
 import 'pages/player/player_page.dart';
 import 'services/service_locator.dart';
@@ -23,7 +22,6 @@ class _MyAppState extends State<MyApp> {
   int _selectedPage = 2;
   final List<Widget> _pages = [
     // DownloadedSongsWidget(),
-    // TestPage(),
     SearchPage(),
     LibraryPage(),
     MusicPlayer(),

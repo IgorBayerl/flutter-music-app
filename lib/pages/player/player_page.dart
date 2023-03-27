@@ -24,7 +24,7 @@ class MusicPlayer extends StatelessWidget {
           children: [
             CurrentSongTitle(),
             PlaylistWidget(),
-            // AddRemoveSongButtons(),
+            AddRemoveSongButtons(),
             AudioProgressBar(),
             AudioControlButtons(),
           ],
@@ -38,9 +38,9 @@ class CurrentSongTitle extends StatelessWidget {
   const CurrentSongTitle({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final pageManager = getIt<PageManager>();
+    final _pageManager = getIt<PageManager>();
     return ValueListenableBuilder<String>(
-      valueListenable: pageManager.currentSongTitleNotifier,
+      valueListenable: _pageManager.currentSongTitleNotifier,
       builder: (_, title, __) {
         return Text(title, style: TextStyle(fontSize: 20));
       },
@@ -52,61 +52,56 @@ class PlaylistWidget extends StatelessWidget {
   const PlaylistWidget({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final pageManager = getIt<PageManager>();
+    final _pageManager = getIt<PageManager>();
     // final downloadService = getIt<DownloadService>();
 
-    // void handleDownload(int index) async {
-    //   print('Download button pressed for song at index $index');
-    //   final song = pageManager.playlistNotifier.value.songs[index];
-    //   await downloadService.downloadMusic(song.remotePath);
-    //   print('Download is complete for song at index $index');
-    // }
+    // TODO: when downloading a song, the list is updating wrong, if i download the third song, the first song on the list shows the name of the first one
+    void handleDownload(int index) async {
+      Song _currentSong =
+          _pageManager.currentPlaylistNotifier.value.songs[index];
+      await _currentSong.download();
+      await _pageManager.updateMediaItem(_currentSong);
+    }
 
-    // void handleDelete(int index) async {
-    //   print('Delete button pressed for song at index $index');
-    //   final song = pageManager.playlistNotifier.value.songs[index];
-    //   await downloadService.deleteMusic(song.localPath);
-    //   print('Delete is complete for song at index $index');
-    // }
+    void handleDelete(int index) async {
+      Song _currentSong =
+          _pageManager.currentPlaylistNotifier.value.songs[index];
+      await _currentSong.delete();
+      await _pageManager.updateMediaItem(_currentSong);
+    }
 
     void handlePlay(int index) {
-      pageManager.playFromMediaIndex(index);
+      _pageManager.playFromMediaIndex(index);
     }
+
     //TODO: The state of the list is not updating correctly
    
     return Expanded(
       child: ValueListenableBuilder<Playlist>(
-        valueListenable: pageManager.currentPlaylistNotifier,
-        builder: (context, playlistTitles, _) {
-          return ListView.builder(
-            itemCount: playlistTitles.songs.length,
+        valueListenable: _pageManager.currentPlaylistNotifier,
+        builder: (context, playList, _) {
+          return ListView.separated(
+            separatorBuilder: (BuildContext context, int index) =>
+                Divider(thickness: 1),
+            itemCount: playList.songs.length,
             itemBuilder: (context, index) {
-              return Container(
-                color: index % 2 == 0 ? Colors.grey[300] : Colors.transparent,
-                child: Column(
-                  children: [
-                    ListTile(
-                      title: Text(playlistTitles.songs[index].title),
-                      // subtitle: Text(playlistTitles.songs[index].album),
-                    ),
-                    // TODO:remove this lines
-                    // Text(playlistTitles.songs[index].localPath),
-                    // Text(playlistTitles.songs[index].remotePath),
-                    // if (playlistTitles.songs[index].localPath.isEmpty)
-                    //   TextButton(
-                    //     onPressed: () => handleDownload(index),
-                    //     child: Text('Download'),
-                    //   )
-                    // else
-                    //   TextButton(
-                    //     onPressed: () => handleDelete(index),
-                    //     child: Text('Delete'),
-                    //   ),
-                    TextButton(
-                      onPressed: () => handlePlay(index),
-                      child: Text('Play'),
-                    )
-                  ],
+              return InkWell(
+                onTap: () => handlePlay(index),
+                child: ListTile(
+                  title: Text(
+                    playList.songs[index].title,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                  trailing: playList.songs[index].isDownloaded
+                      ? IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () => handleDelete(index),
+                        )
+                      : IconButton(
+                          icon: Icon(Icons.download),
+                          onPressed: () => handleDownload(index),
+                        ),
                 ),
               );
             },
@@ -117,23 +112,25 @@ class PlaylistWidget extends StatelessWidget {
   }
 }
 
+
+
 class AddRemoveSongButtons extends StatelessWidget {
   const AddRemoveSongButtons({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final pageManager = getIt<PageManager>();
-    final playlistService = getIt<PlaylistService>();
+    final _pageManager = getIt<PageManager>();
+    final _playlistService = getIt<PlaylistService>();
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           FloatingActionButton(
-            onPressed: pageManager.clearQueue,
+            onPressed: _pageManager.clearQueue,
             child: Icon(Icons.clear),
           ),
           FloatingActionButton(
-            onPressed: pageManager.logPlaylist,
+            onPressed: _pageManager.logPlaylist,
             child: Icon(Icons.login),
           ),
 
@@ -142,7 +139,7 @@ class AddRemoveSongButtons extends StatelessWidget {
           //   child: Icon(Icons.add),
           // ),
           FloatingActionButton(
-            onPressed: pageManager.remove,
+            onPressed: _pageManager.remove,
             child: Icon(Icons.remove),
           ),
           // FloatingActionButton(
@@ -170,15 +167,15 @@ class AudioProgressBar extends StatelessWidget {
   const AudioProgressBar({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final pageManager = getIt<PageManager>();
+    final _pageManager = getIt<PageManager>();
     return ValueListenableBuilder<ProgressBarState>(
-      valueListenable: pageManager.progressNotifier,
+      valueListenable: _pageManager.progressNotifier,
       builder: (_, value, __) {
         return ProgressBar(
           progress: value.current,
           buffered: value.buffered,
           total: value.total,
-          onSeek: pageManager.seek,
+          onSeek: _pageManager.seek,
         );
       },
     );

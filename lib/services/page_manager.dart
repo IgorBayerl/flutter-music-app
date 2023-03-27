@@ -37,76 +37,69 @@ class PageManager {
   }
 
   Future<void> _loadLastPlayedPlaylist() async {
-    List<MediaItem> mediaItems = [];
-    final _playlistService = GetIt.instance<PlaylistService>();
-    final _playlist = await _playlistService.loadLastPlayedPlaylist();
-    // TODO: try to remove this line by updating the currentPlaylistNotifier from the _audioHandler.queue updates
-    // TODO: Without this line the playlist page is not loaded initialy
-    currentPlaylistNotifier.value = _playlist;
+    final playlistService = GetIt.instance<PlaylistService>();
+    final playlist = await playlistService.loadLastPlayedPlaylist();
 
-    // final _playlistService = GetIt.instance<PlaylistService>();
-    // final _playlist = await _playlistService.loadLastPlayedPlaylist();
-    print('Playlist loaded: ${_playlist.songs.length} songs');
-    _playlist.songs.forEach((song) {
-      mediaItems.add(
-        MediaItem(
-          id: song.id,
-          album: song.album,
-          title: song.title,
-          extras: {
-            'remotePath': song.remotePath,
-            'localPath': song.localPath,
-            'isLocalPath': song.isDownloaded,
-            'songServerUrl': song.songServerUrl,
-          },
-        ),
-      );
-    });
+    print('Playlist loaded: ${playlist.songs.length} songs');
+    final mediaItemsFutures = playlist.songs.map((song) async {
+      await song.initializeLocalPath();
+      return song.toMediaItem();
+    }).toList();
 
-    _audioHandler.addQueueItems(mediaItems);
+    final mediaItems = await Future.wait(mediaItemsFutures);
+    // await Future.delayed(Duration(milliseconds: 500));
+    _audioHandler.updateQueue(mediaItems);
   }
+
+  // Future<void> updateSongDownloadState(Song song) async {
+  //   final _currentPlaylist = currentPlaylistNotifier.value;
+  //   final index =
+  //       _currentPlaylist.songs.indexWhere((element) => element.id == song.id);
+
+  //   await song.initializeLocalPath();
+  //   _currentPlaylist.songs[index] = song;
+
+  //   currentPlaylistNotifier.value = _currentPlaylist;
+
+  //   //update in the queue
+  //   final mediaItem = song.toMediaItem();
+  //   await _audioHandler.updateMediaItem(mediaItem);
+  // }
 
   void logPlaylist() {
     print('Playlist: ${_audioHandler.queue.value.length} songs');
-    _audioHandler.queue.value.forEach((song) {
-      print(song.title);
+    currentPlaylistNotifier.value.songs.forEach((song) {
+      print(song.isDownloaded.toString() + ' - ' + song.title);
     });
   }
 
-  Future<void> updatePlaylist(Playlist playlist) async {
-    clearQueue();
+  void playNewPlaylist(Playlist playlist) async {
+    // clearQueue();
 
     List<MediaItem> _mediaItems = playlist.songs.map((song) {
-      return MediaItem(
-        id: song.id,
-        album: song.album,
-        title: song.title,
-        extras: {
-          'remotePath': song.remotePath,
-          'localPath': song.localPath,
-          'isLocalPath': song.isDownloaded,
-          'songServerUrl': song.songServerUrl,
-        },
-      );
+      return song.toMediaItem();
     }).toList();
-    // TODO: Without this line the playlist page is not loaded when click in the play button in playlists page
-    currentPlaylistNotifier.value = playlist;
 
-    await _audioHandler.addQueueItems(_mediaItems);
+    // currentPlaylistNotifier.value = playlist;
 
-    // TODO: investigate why this is needed
-    // wait half a second and play, otherwise the player will not start
+    // await _audioHandler.addQueueItems(_mediaItems);
+
+    // // TODO: investigate why this is needed
+    // // wait half a second and play, otherwise the player will not start
+
+    _audioHandler.updateQueue(_mediaItems);
     await Future.delayed(Duration(milliseconds: 500));
     await _audioHandler.play();
   }
 
-  static void _updateLocalPlaylist(Playlist playlist) async {
-    PlaylistService _playlistService = GetIt.instance<PlaylistService>();
-    _playlistService.savePlaylist(playlist);
-  }
+  // static void _updateLocalPlaylist(Playlist playlist) async {
+  //   PlaylistService _playlistService = GetIt.instance<PlaylistService>();
+  //   _playlistService.savePlaylist(playlist);
+  // }
 
   void _listenToChangesInPlaylist() {
     _audioHandler.queue.listen((List<MediaItem> queue) {
+      print("QUEUE CHANGED");
       final List<Song> _songs =
           queue.map((mediaItem) => Song.fromMediaItem(mediaItem)).toList();
 
@@ -228,24 +221,6 @@ class PageManager {
     }
   }
 
-  // Future<void> add() async {
-  //   final songRepository = getIt<PlaylistRepository>();
-  //   final song = await songRepository.fetchAnotherSong();
-  //   //TODO: here we can add the arts of the song in the future
-  //   final mediaItem = MediaItem(
-  //     id: song.id,
-  //     album: song.album,
-  //     title: song.title,
-  //     extras: {
-  //       'remotePath': song.remotePath,
-  //       'localPath': song.localPath,
-  //       'isLocalPath': song.isLocalPath,
-  //       'songServerUrl': song.songServerUrl,
-  //     },
-  //   );
-  //   _audioHandler.addQueueItem(mediaItem);
-  // }
-
   void remove() {
     final lastIndex = _audioHandler.queue.value.length - 1;
     if (lastIndex < 0) return;
@@ -267,8 +242,19 @@ class PageManager {
     _audioHandler.stop();
   }
 
-  void playFromMediaIndex(int mediaId) async {
-    await _audioHandler.skipToQueueItem(mediaId);
+  void playFromMediaIndex(int mediaIndex) async {
+    await _audioHandler.skipToQueueItem(mediaIndex);
     _audioHandler.play();
+
+    final logItem = _audioHandler.queue.value[mediaIndex];
+    //log media item path
+    print('>>>>>> playFromMediaIndex.logItem $logItem');
+  }
+
+  Future<void> updateMediaItem(Song song) async {
+    final _item = song.toMediaItem();
+
+    await _audioHandler.updateMediaItem(_item);
+    print('>>>>>> logTest');
   }
 }

@@ -31,10 +31,10 @@ class _PlaylistPageState extends State<PlaylistPage> {
 
   Future<void> _loadPlaylist() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final playlistJson = prefs.getString(widget.playlist.id);
-    if (playlistJson != null) {
+    final _playlistJson = prefs.getString(widget.playlist.id);
+    if (_playlistJson != null) {
       setState(() {
-        _playlist = Playlist.fromJson(jsonDecode(playlistJson));
+        _playlist = Playlist.fromJson(jsonDecode(_playlistJson));
       });
     } else {
       // If the playlist doesn't exist, create an empty one
@@ -50,20 +50,20 @@ class _PlaylistPageState extends State<PlaylistPage> {
   }
 
   Future<void> _savePlaylist() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(widget.playlist.id, jsonEncode(_playlist.toJson()));
+    SharedPreferences _prefs = await SharedPreferences.getInstance();
+    await _prefs.setString(widget.playlist.id, jsonEncode(_playlist.toJson()));
   }
 
   void _addSong() async {
-    final song = await Navigator.push<Song>(
+    final _song = await Navigator.push<Song>(
       context,
       MaterialPageRoute(
         builder: (context) => AddSongPage(),
       ),
     );
-    if (song != null) {
+    if (_song != null) {
       setState(() {
-        _playlist.addSong(song);
+        _playlist.addSong(_song);
       });
       await _savePlaylist();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -85,13 +85,13 @@ class _PlaylistPageState extends State<PlaylistPage> {
   Future<void> _playPlaylist() async {
     //TODO: Add all the musics to the queue
     // Currently its only defining the playlist as the current one and you should restart the app to play it
-    final pageManager = getIt<PageManager>();
+    final _pageManager = getIt<PageManager>();
     String playlistId = _playlist.id;
 
     // _playlistService.loadPlaylist();
 
     print("Play playlist $playlistId");
-    pageManager.updatePlaylist(_playlist);
+    _pageManager.playNewPlaylist(_playlist);
 
     // TODO: try to move this responsability to the page manager
     final _playlistService = GetIt.instance<PlaylistService>();
@@ -132,11 +132,11 @@ class _PlaylistPageState extends State<PlaylistPage> {
               child: ListView.builder(
                 itemCount: _playlist.songs.length,
                 itemBuilder: (BuildContext context, int index) {
-                  final song = _playlist.songs[index];
+                  final _song = _playlist.songs[index];
                   return Dismissible(
-                    key: Key(song.id),
+                    key: Key(_song.id),
                     direction: DismissDirection.endToStart,
-                    onDismissed: (direction) => _removeSong(song.id),
+                    onDismissed: (direction) => _removeSong(_song.id),
                     background: Container(
                       color: Colors.red,
                       child: Align(
@@ -151,12 +151,12 @@ class _PlaylistPageState extends State<PlaylistPage> {
                       ),
                     ),
                     child: ListTile(
-                      title: Text(song.title),
-                      subtitle: Text(song.artist),
+                      title: Text(_song.title),
+                      subtitle: Text(_song.artist),
                       trailing: Text(
-                        song.duration.inMinutes.remainder(60).toString() +
+                        _song.duration.inMinutes.remainder(60).toString() +
                             ':' +
-                            song.duration.inSeconds
+                            _song.duration.inSeconds
                                 .remainder(60)
                                 .toString()
                                 .padLeft(2, '0'),

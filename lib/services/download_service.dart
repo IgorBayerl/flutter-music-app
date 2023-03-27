@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 
 class DownloadService {
-  //TODO: uldate the playlist isLocalPath and url to true when download is completed
+  //TODO: uldate the playlist localPath and url to true when download is completed
   Future<void> downloadMusic(String musicUrl) async {
     Dio dio = Dio();
 
